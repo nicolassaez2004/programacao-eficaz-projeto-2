@@ -1,0 +1,28 @@
+# Ambiente virtual do Python
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+
+# Cache dos testes
+.pytest_cache/
+
+# Cobertura de testes
+.coverage
+htmlcov/
+
+# Editores
+.vscode/
+.idea/
+
+# Sistemas operacionais
+.DS_Store
+Thumbs.db
