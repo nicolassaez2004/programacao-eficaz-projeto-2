@@ -26,3 +26,5 @@ htmlcov/
 # Sistemas operacionais
 .DS_Store
 Thumbs.db
+
+ca.pem
