@@ -28,7 +28,7 @@ def test_listar_imoveis_vazio(mock_conectar_banco, client):
     assert response.get_json() == []
 
     mock_cursor.execute.assert_called_once_with(
-        "SELECT id, tipo, cidade, endereco, preco, tamanho_m2, quartos, banheiros FROM tbl_imoveis"
+        "SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao FROM imoveis"
     )
 
     mock_cursor.fetchall.assert_called_once()
@@ -45,9 +45,9 @@ def test_listar_imoveis_com_dados(mock_conectar_banco, client):
     mock_conn.cursor.return_value = mock_cursor
 
     mock_cursor.fetchall.return_value = [
-        (1, "casa", "São Paulo", "Rua A, 123", 500000.00, 120.00, 3, 2),
-        (2, "apartamento", "Rio de Janeiro", "Av. B, 456", 300000.00, 80.00, 2, 1),
-        (3, "terreno", "Belo Horizonte", "Rua C, 789", 150000.00, 500.00, 0, 0),
+        (1, "Rua A", "Rua", "Centro", "São Paulo", "01000-000", "casa", 500000.00, "2024-01-01"),
+        (2, "Av. B", "Avenida", "Copacabana", "Rio de Janeiro", "22000-000", "apartamento", 300000.00, "2024-02-01"),
+        (3, "Rua C", "Rua", "Savassi", "Belo Horizonte", "30100-000", "terreno", 150000.00, "2024-03-01"),
     ]
 
     mock_conectar_banco.return_value = mock_conn
@@ -81,7 +81,7 @@ def test_obter_imovel_ok(mock_conectar_banco, client):
     mock_conn.cursor.return_value = mock_cursor
 
     mock_cursor.fetchone.return_value = (
-        1, "casa", "São Paulo", "Rua A, 123", 500000.00, 120.00, 3, 2
+        1, "Rua A", "Rua", "Centro", "São Paulo", "01000-000", "casa", 500000.00, "2024-01-01"
     )
 
     mock_conectar_banco.return_value = mock_conn
@@ -97,7 +97,7 @@ def test_obter_imovel_ok(mock_conectar_banco, client):
     assert dados["preco"] == 500000.00
 
     mock_cursor.execute.assert_called_once_with(
-        "SELECT id, tipo, cidade, endereco, preco, tamanho_m2, quartos, banheiros FROM tbl_imoveis WHERE id = %s",
+        "SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao FROM imoveis WHERE id = %s",
         (1,),
     )
 
@@ -123,7 +123,7 @@ def test_obter_imovel_not_found(mock_conectar_banco, client):
     assert response.get_json() == {"erro": "Imóvel não encontrado"}
 
     mock_cursor.execute.assert_called_once_with(
-        "SELECT id, tipo, cidade, endereco, preco, tamanho_m2, quartos, banheiros FROM tbl_imoveis WHERE id = %s",
+        "SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao FROM imoveis WHERE id = %s",
         (999,),
     )
 
@@ -143,13 +143,14 @@ def test_criar_imovel_ok(mock_conectar_banco, client):
     mock_conectar_banco.return_value = mock_conn
 
     payload = {
-        "tipo": "casa",
+        "logradouro": "Rua D",
+        "tipo_logradouro": "Rua",
+        "bairro": "Centro",
         "cidade": "Curitiba",
-        "endereco": "Rua D, 321",
-        "preco": 450000.00,
-        "tamanho_m2": 110.00,
-        "quartos": 3,
-        "banheiros": 2,
+        "cep": "80000-000",
+        "tipo": "casa",
+        "valor": 450000.00,
+        "data_aquisicao": "2024-05-01",
     }
 
     response = client.post("/imovel", json=payload)
@@ -167,7 +168,7 @@ def test_criar_imovel_erro_validacao(mock_conectar_banco, client):
 
     payload = {
         "tipo": "casa",
-        "cidade": "São Paulo"
+        "cidade": ""
     }
 
     response = client.post("/imovel", json=payload)
@@ -190,13 +191,14 @@ def test_atualizar_imovel_ok(mock_conectar_banco, client):
     mock_conectar_banco.return_value = mock_conn
 
     payload = {
-        "tipo": "casa",
+        "logradouro": "Rua A",
+        "tipo_logradouro": "Rua",
+        "bairro": "Centro",
         "cidade": "São Paulo",
-        "endereco": "Rua A, 123",
-        "preco": 550000.00,
-        "tamanho_m2": 130.00,
-        "quartos": 4,
-        "banheiros": 2,
+        "cep": "01000-000",
+        "tipo": "casa",
+        "valor": 550000.00,
+        "data_aquisicao": "2024-06-01",
     }
 
     response = client.put("/imovel/1", json=payload)
@@ -221,13 +223,14 @@ def test_atualizar_imovel_not_found(mock_conectar_banco, client):
     mock_conectar_banco.return_value = mock_conn
 
     payload = {
-        "tipo": "casa",
+        "logradouro": "Rua A",
+        "tipo_logradouro": "Rua",
+        "bairro": "Centro",
         "cidade": "São Paulo",
-        "endereco": "Rua A, 123",
-        "preco": 500000.00,
-        "tamanho_m2": 120.00,
-        "quartos": 3,
-        "banheiros": 2,
+        "cep": "01000-000",
+        "tipo": "casa",
+        "valor": 500000.00,
+        "data_aquisicao": "2024-06-01",
     }
 
     response = client.put("/imovel/999", json=payload)
@@ -245,7 +248,7 @@ def test_atualizar_imovel_erro_validacao(mock_conectar_banco, client):
 
     payload = {
         "tipo": "casa",
-        "cidade": "São Paulo"
+        "cidade": ""
     }
 
     response = client.put("/imovel/1", json=payload)
@@ -273,7 +276,7 @@ def test_deletar_imovel_ok(mock_conectar_banco, client):
     assert response.get_json() == {"mensagem": "Imóvel excluído com sucesso"}
 
     mock_cursor.execute.assert_called_once_with(
-        "DELETE FROM tbl_imoveis WHERE id = %s",
+        "DELETE FROM imoveis WHERE id = %s",
         (1,),
     )
 
@@ -299,7 +302,7 @@ def test_deletar_imovel_not_found(mock_conectar_banco, client):
     assert response.get_json() == {"erro": "Imóvel não encontrado"}
 
     mock_cursor.execute.assert_called_once_with(
-        "DELETE FROM tbl_imoveis WHERE id = %s",
+        "DELETE FROM imoveis WHERE id = %s",
         (999,),
     )
 
@@ -317,8 +320,8 @@ def test_buscar_por_tipo_encontrados(mock_conectar_banco, client):
     mock_conn.cursor.return_value = mock_cursor
 
     mock_cursor.fetchall.return_value = [
-        (1, "casa", "São Paulo", "Rua A, 123", 500000.00, 120.00, 3, 2),
-        (4, "casa", "Curitiba", "Rua D, 321", 450000.00, 110.00, 3, 2),
+        (1, "Rua A", "Rua", "Centro", "São Paulo", "01000-000", "casa", 500000.00, "2024-01-01"),
+        (4, "Rua D", "Rua", "Batel", "Curitiba", "80000-000", "casa", 450000.00, "2024-05-01"),
     ]
 
     mock_conectar_banco.return_value = mock_conn
@@ -332,7 +335,7 @@ def test_buscar_por_tipo_encontrados(mock_conectar_banco, client):
     assert all(i["tipo"] == "casa" for i in dados)
 
     mock_cursor.execute.assert_called_once_with(
-        "SELECT id, tipo, cidade, endereco, preco, tamanho_m2, quartos, banheiros FROM tbl_imoveis WHERE tipo = %s",
+        "SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao FROM imoveis WHERE tipo = %s",
         ("casa",),
     )
 
@@ -371,8 +374,8 @@ def test_buscar_por_cidade_encontrados(mock_conectar_banco, client):
     mock_conn.cursor.return_value = mock_cursor
 
     mock_cursor.fetchall.return_value = [
-        (1, "casa", "São Paulo", "Rua A, 123", 500000.00, 120.00, 3, 2),
-        (5, "apartamento", "São Paulo", "Av. E, 654", 350000.00, 90.00, 2, 1),
+        (1, "Rua A", "Rua", "Centro", "São Paulo", "01000-000", "casa", 500000.00, "2024-01-01"),
+        (5, "Av. E", "Avenida", "Ipiranga", "São Paulo", "04000-000", "apartamento", 350000.00, "2024-07-01"),
     ]
 
     mock_conectar_banco.return_value = mock_conn
@@ -386,7 +389,7 @@ def test_buscar_por_cidade_encontrados(mock_conectar_banco, client):
     assert all(i["cidade"] == "São Paulo" for i in dados)
 
     mock_cursor.execute.assert_called_once_with(
-        "SELECT id, tipo, cidade, endereco, preco, tamanho_m2, quartos, banheiros FROM tbl_imoveis WHERE cidade = %s",
+        "SELECT id, logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao FROM imoveis WHERE cidade = %s",
         ("São Paulo",),
     )
 
