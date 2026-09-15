@@ -1,8 +1,12 @@
 import os
-import mysql.connector
-from mysql.connector import Error
+try:
+    import mysql.connector
+    from mysql.connector import Error
+except Exception:  
+    mysql = None
+    Error = Exception
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -358,6 +362,11 @@ def buscar_por_cidade(cidade):
     conn.close()
 
     return jsonify([imovel_to_dict(i) for i in imoveis]), 200
+
+
+@app.route("/", methods=["GET"])
+def index():
+    return redirect("/imovel")
 
 
 if __name__ == "__main__":
